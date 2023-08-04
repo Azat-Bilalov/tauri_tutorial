@@ -21,6 +21,7 @@ const todosController = {
     },
     deleteTodo: (id) => {
         const todos = repo.readData();
+        console.log(typeof id, typeof todos[0].id);
         const index = todos.findIndex(t => t.id == id);
         if (index >= 0) {
             const todo = todos[index];

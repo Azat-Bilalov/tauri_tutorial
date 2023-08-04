@@ -17,12 +17,13 @@
         "all": false,
         "open": true
       },
-      "dialog": {
-        "confirm": true
-      },
       "http": {
         "request": true,
         "scope": ["http://localhost:3000/**"]
+      },
+      "dialog": {
+        "confirm": true,
+        "message": true
       }
     },
     "bundle": {

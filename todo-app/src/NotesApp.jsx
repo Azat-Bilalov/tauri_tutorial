@@ -1,26 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { getTodos } from './api/api';
+import { TodosApi } from './api';
+import { getClient, ResponseType } from '@tauri-apps/api/http';
+import { message } from '@tauri-apps/api/dialog';
 
 import './styles.css';
 
 const NotesApp = () => {
+    const todosApi = new TodosApi();
+
     const [notes, setNotes] = useState([]);
 
     const [newNote, setNewNote] = useState({ title: '', content: '' });
 
     const handleAddNote = () => {
+        if (!newNote.title || !newNote.content) {
+            return message(
+                'Поля не могут быть пустыми', 
+                { title: 'Ошибка', type: 'error' }
+            );
+        };
         const newNoteWithId = { ...newNote, id: Date.now() };
         setNotes([...notes, newNoteWithId]);
         setNewNote({ title: '', content: '' });
+
+        todosApi.postTodos(newNoteWithId);
     };
 
     const handleDeleteNote = (id) => {
-        const updatedNotes = notes.filter((note) => note.id !== id);
-        setNotes(updatedNotes);
+        confirm('This action cannot be reverted. Are you sure?')
+            .then(res => {
+                if (!res) return;
+                const updatedNotes = notes.filter((note) => note.id !== id);
+                setNotes(updatedNotes);
+        
+                todosApi.deleteTodos(id);
+            });
     };
 
     useEffect(() => {
-        getTodos().then((data) => setNotes(data));
+        todosApi.getTodos().then(data => {
+            setNotes(data);
+        });
     }, []);
 
     return (
