@@ -1,6 +1,8 @@
 [
     {
         "id": "1",
-        "title": "title1"
+        "title": "title1",
+        "content": "content1",
+        "completed": "false"
     }
 ]
