@@ -2,15 +2,15 @@ const express = require('express');
 const router = express.Router();
 
 const todosController = require('./controller');
+const validateTodo = require('../middleware/validation');
 
 router.get('/', (req, res) => {
     const todos = todosController.getTodos();
     res.send(todos);
 });
 
-router.post('/', (req, res) => {
-    const body = req.body;
-    const todo = todosController.postTodo(body);
+router.post('/', validateTodo, (req, res) => {
+    const todo = todosController.postTodo(req.validatedTodo);
     res.send(todo);
 });
 
