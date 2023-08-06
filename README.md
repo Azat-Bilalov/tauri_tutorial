@@ -158,7 +158,7 @@ npm run tauri dev
 
 В папке 'src' вы найдёте JSX файлы - файлы React компонентов. Сейчас в файле 'App.jsx' сгенерированный код. Изменим его так, чтобы в нём остались стили, и наш компонент
 
-### Шаг 5: Сборка Tauri приложения
+### Шаг 6: Сборка Tauri приложения
 
 Когда вы готовы опубликовать ваше Tauri приложение, вы можете выполнить команду:
 
@@ -167,5 +167,141 @@ tauri build
 ```
 
 Это соберет ваше приложение для целевой платформы (например, Windows, macOS, Linux), и вы найдете файлы приложения в папке `src-tauri/target/release/bundle`.
+
+## Добавление Middleware для сервера
+
+Middleware - связующее ПО, которое помогает обмену запросов между приложением и сервером. Оно снижает зависимость от API, позволяет не торопиться  собновлением старого бэкенда и снижает нагрузку.
+
+### Шаг 1: Логирование запросов
+
+Для логирования запросов мы будем использовать библиотеку [morgan](https://github.com/expressjs/morgan). Чтобы ее установить, перейдите в директорию `server` и напишите в командной строке:
+
+```bash
+npm install morgan
+```
+
+### Шаг 2: Установка логгера
+
+Логгер необходим для фиксации событий в работе веб-ресурса, которая помогает выявлять и исправлять в будущем баги системы или ее сбои.
+
+В файле `index.js` импортируйте `morgan`:
+
+```javascript
+const express = require('express');
+const app = expres();
+const cors = require('cors');
+// Импортируем библиотеку
+const morgan = require('morgan');
+// ... Остальной код
+```
+
+Далее добавляем логгер и устанавливаем в режим `'combined'` для более подробного получения данных:
+
+```javascript
+// ... Остальной код
+
+app.use(cors());
+app.use(express.json());
+// Устанавливаем morgan в режим 'combined'
+app.use(morgan('combined'));
+
+// ... Остальной код
+```
+
+Теперь вы можете проверить работоспособность с помощью тестового запроса:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"title":"Buy groceries"}' http://localhost:3000/todos
+```
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"content":"Openheimer or Barbie???"}' http://localhost:3000/todos
+```
+
+### Шаг 3: Добавление валидации задач
+
+После того, как мы с помощью `curl` попробовали внести новые данные, можно обратить внимание, что они никак не обрабатываются, т.е. спокойно можно внести запись без заголовка, описания или абсолютно пустую запись.
+
+Чтобы этого избежать, необходимо добавить еще один "слой" Middleware, перейдите в директорию `server` и пропишите в терминале:
+
+```bash
+mkdir middleware
+```
+
+После этого создйте в этой директории файл `validation.js`.
+
+```javascript
+const validateTodo = (req, res, next) => {
+    const body = req.body;
+
+    // Проверка наличия поля "title"
+    if (!body.title) {
+        return res.status(400).json({ error: 'Title is required' });
+    }
+
+    // Задаем значения по умолчанию для "content" и "completed"
+    const content = body.content || '';
+    const completed = body.completed || false;
+
+    // Создаем объект с валидированными данными
+    req.validatedTodo = {
+        title: body.title,
+        content: content,
+        completed: completed
+    };
+
+    // Переходим к следующему обработчику
+    next();
+};
+
+// Экспорт функции валидации
+module.exports = {
+    validateTodo
+};
+```
+
+Здесь мы проверяем наличие поле title, если оно будет не заполнено, вернется ошибка с описанием `Title is required`.
+
+Далее, если поля content и completed не заполнены, то мы заполняем их по умолчанию пустой строкой и `false` соответственно.
+
+Функция `next()`, которую мы передаем вместе с параметрами, необходима для того, чтобы с видоизмененным запросом перейти к следующему обработчику.
+
+### Шаг 4: Добавляем валидацию на POST-запрос
+
+Перейдем в файл `/server/todos/app.js` и перепишем POST-запрос.
+
+```javascript
+const express = require('express');
+const router = express.Router();
+
+const todosController = require('./controller');
+const validateTodo = require('../middleware/validation');
+
+/*
+*   GET-запрос.
+*/
+
+router.post('/', validateTodo, (req, res) => {
+    const todo = todosController.postTodo(req.validatedTodo);
+    res.send(todo);
+});
+```
+
+1. Мы поменяли входные параметры, теперь обработчик принимает еще один параметр, нашу функцию `validateTodo`, которая валидирует запрос.
+
+2. Теперь в метод контроллера мы отправляем свойство `req.validateTodo`, которое пришло к нам из `validateTodo`.
+
+Если попробуем добавить какие-то некорректные данные, например:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"content":"Buy fruits"}' http://localhost:3000/todos
+```
+
+Получаем на выходе ошибку:
+```bash
+{
+  "error": "Title is required"
+}
+```
 
 Теперь у вас есть простое CRUD-backend с использованием Express и Tauri приложение, которое может взаимодействовать с этим бэкендом. Вы можете использовать Tauri для создания кросс-платформенных desktop-приложений, интегрирующих ваш CRUD-backend для заметок.
