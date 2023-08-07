@@ -1,11 +1,11 @@
 import React from 'react';
-import NotesApp from './NotesApp';
+import TodoListPage from './pages/TodoList';
 import './styles.css';
 
 function App() {
     return (
         <div className="App">
-            <NotesApp />
+            <TodoListPage />
         </div>
     );
 }

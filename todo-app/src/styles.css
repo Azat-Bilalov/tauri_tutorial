@@ -39,7 +39,7 @@ h1 {
 }
 
 /* Стили для списка заметок */
-.note {
+.todo {
   background-color: #f7f7f7;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -47,7 +47,7 @@ h1 {
   margin-bottom: 10px;
 }
 
-.note h3 {
+.todo-title {
   margin-top: 0;
 }
 
