@@ -160,12 +160,27 @@ npm run tauri dev
 
 ### Шаг 5: Разработка
 
-В папке 'src' вы найдёте JSX файлы - файлы React компонентов. Создадим 
+В папке `src` вы найдёте JSX файлы - файлы React компонентов. Создадим 
 
+Сейчас в файле `App.jsx` сгенерированный код. Изменим его так, чтобы в нём остались только стили, и наш будущий компонент:
 
+```jsx
+import React from 'react';
+import TodoListPage from './pages/TodoList';
+import './styles.css';
 
-Сейчас в файле 'App.jsx' сгенерированный код. Изменим его так, чтобы в нём остались стили, и наш компонент:
+function App() {
+    return (
+        <div className="App">
+            <TodoListPage />
+        </div>
+    );
+}
 
+export default App;
+```
+
+<!--Дальше хочу сказать про то почему TodoList.jsx в папке pages + не знаю что за step6 #TODO -->
 
 ### Шаг 6: Сборка Tauri приложения
 
