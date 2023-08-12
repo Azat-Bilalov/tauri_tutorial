@@ -236,13 +236,91 @@ export default TodoListPage;
 
 ![Untitled](assets/5.1.png)
 
-Так как приложение использует стили по умолчанию для своего шаблона, мы Отредактируем стили приложения `src/styles.css`:
+Так как приложение использует стили по умолчанию для своего шаблона, мы отредактируем `src/styles.css` так, чтобы сначала [сбросить](https://medium.com/@stasonmars/%D1%81%D0%BE%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B8%CC%86-%D1%81%D0%B1%D1%80%D0%BE%D1%81-css-f5816963c82b) стили по-умолчанию, а затем установить новые для приложения:
 
 <details>
-<summary>Cтили `src/styles.css`</summary>
+<summary>Новые стили `src/styles.css`</summary>
 
 ```css
-/* styles.css */
+/* Сброс стилей */
+/* Указываем box sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Убираем внутренние отступы */
+ul[class],
+ol[class] {
+  padding: 0;
+}
+
+/* Убираем внешние отступы */
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+ul[class],
+ol[class],
+li,
+figure,
+figcaption,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Выставляем основные настройки по-умолчанию для body */
+body {
+  min-height: 100vh;
+  scroll-behavior: smooth;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+}
+
+/* Удаляем стандартную стилизацию для всех ul и il, у которых есть атрибут class*/
+ul[class],
+ol[class] {
+  list-style: none;
+}
+
+/* Элементы a, у которых нет класса, сбрасываем до дефолтных стилей */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* Упрощаем работу с изображениями */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Указываем понятную периодичность в потоке данных у article*/
+article > * + * {
+  margin-top: 1em;
+}
+
+/* Наследуем шрифты для инпутов и кнопок */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Удаляем все анимации и переходы для людей, которые предпочитай их не использовать */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Общие стили */
 body {
@@ -299,40 +377,66 @@ h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-radius: 5px;
 }
 
-.button-add {
+/* Текст заметки на отдельной страницу */
+.large-content {
+  white-space: pre-wrap;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  height: max-content;
+  padding: 5px;
+}
+
+/* стили кнопок и текста */
+.button {
+  display: inline-block;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  transition: ease-in-out 0.3s;
+  text-decoration: none;
+}
+
+.button:hover {
+  transform: scale(1.1);
+  transition: ease-in-out 0.3s;
+}
+
+.button-success {
   background-color: #00bfff;
   color: #fff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease-in-out;
 }
 
-.button-delete {
-  background-color: #ff6347;
+.button-danger {
+  background-color: #f16c54;
   color: #fff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease-in-out;
 }
 
-.button-add:hover {
-  background-color: #0099cc;
-  transition: background-color 0.3s ease-in-out;
+.button-light {
+  background-color: #f7f7f7;
+  color: #333;
 }
 
-.button-delete:hover {
-  background-color: #cc4635;
-  transition: background-color 0.3s ease-in-out;
+.button-info {
+  background-color: #c975ed;
+  color: #fff;
 }
 
-.button-lg {
+.text-lg {
   font-size: 16px;
+}
+
+.text-md {
+  font-size: 14px;
+}
+
+.text-sm {
+  font-size: 12px;
 }
 ```
 </details>

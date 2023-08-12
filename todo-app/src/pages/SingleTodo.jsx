@@ -18,12 +18,20 @@ export function SingleTodoPage() {
     return (
         <div className='container'>
             <Link to="/">
-                <button>Назад</button>
+                {/* <button className='button button-info'>Назад</button>
+               стелка вместо надписи */}
+                <button className='button button-light text-lg'>
+                    🔙 Вернуться
+                </button>
+
             </Link>
-            {todo && <>
-                <h1>{todo?.title}</h1>
-                <p>{todo?.content}</p>
-            </>}
+            {todo &&
+                <div className='vertical-center'>
+                    <div>
+                        <h1>{todo?.title}</h1>
+                        <p className='large-content'>{todo?.content}</p>
+                    </div>
+                </div>}
             {!todo &&
                 <h1>Задача не найдена</h1>
             }

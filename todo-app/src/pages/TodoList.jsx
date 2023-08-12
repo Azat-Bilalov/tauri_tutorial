@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { TodosApi } from '../api';
 import { Link } from 'react-router-dom';
-import { message } from '@tauri-apps/api/dialog';
+import { message, confirm } from '@tauri-apps/api/dialog';
+import { useSearchParams } from 'react-router-dom';
 
 export function TodoListPage() {
     const todosApi = new TodosApi();
 
     const [todos, setTodos] = useState([]);
-
     const [newTodo, setNewTodo] = useState({ title: '', content: '' });
+
+    const [searchParams] = useSearchParams();
+    const newTodoRef = useRef();
+
+    useEffect(() => {
+        if (searchParams.has('new-todo')) {
+            newTodoRef.current.focus();
+        }
+    }, [searchParams]);
 
     const handleAddTodo = () => {
         if (!newTodo.title || !newTodo.content) {
@@ -50,6 +59,7 @@ export function TodoListPage() {
                     type="text"
                     placeholder="Название"
                     value={newTodo.title}
+                    ref={newTodoRef}
                     onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
                 />
                 <textarea
@@ -58,7 +68,7 @@ export function TodoListPage() {
                     value={newTodo.content}
                     onChange={(e) => setNewTodo({ ...newTodo, content: e.target.value })}
                 />
-                <button className="button-add button-lg" onClick={handleAddTodo}>Добавить</button>
+                <button className="button button-success text-lg" onClick={handleAddTodo}>Добавить</button>
             </div>
             <hr />
             <div className="container">
@@ -72,8 +82,8 @@ export function TodoListPage() {
                             <p className="todo-content">
                                 {todo.content}
                             </p>
-                            <button className='button-delete' onClick={() => handleDeleteTodo(todo.id)}>Удалить</button>
-                            <Link to={todo.id.toString()} className='button-more'>Подробнее</Link>
+                            <button className='button button-danger text-md' onClick={() => handleDeleteTodo(todo.id)}>Удалить</button>
+                            <Link to={todo.id.toString()} className='button button-info text-md'>Подробнее</Link>
                         </div>
                     )
                 })}
