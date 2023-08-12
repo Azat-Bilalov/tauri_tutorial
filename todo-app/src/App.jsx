@@ -1,11 +1,14 @@
 import React from 'react';
-import TodoListPage from './pages/TodoList';
-import './styles.css';
+import { Route, Routes } from 'react-router-dom';
+import { TodoListPage, SingleTodoPage } from './pages';
 
 function App() {
     return (
         <div className="App">
-            <TodoListPage />
+            <Routes>
+                <Route path="/" exact element={<TodoListPage />} />
+                <Route path="/:id" element={<SingleTodoPage />} />
+            </Routes>
         </div>
     );
 }

@@ -51,6 +51,12 @@ h1 {
   margin-top: 0;
 }
 
+.todo-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .button-add {
   background-color: #00bfff;
   color: #fff;
@@ -63,6 +69,16 @@ h1 {
 
 .button-delete {
   background-color: #ff6347;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.button-more {
+  background-color: #c975ed;
   color: #fff;
   border: none;
   padding: 5px 10px;

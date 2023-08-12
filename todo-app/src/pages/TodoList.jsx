@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { TodosApi } from '../api';
+import { Link } from 'react-router-dom';
 import { message } from '@tauri-apps/api/dialog';
 
-const TodoListPage = () => {
+export function TodoListPage() {
     const todosApi = new TodosApi();
 
     const [todos, setTodos] = useState([]);
@@ -12,7 +13,7 @@ const TodoListPage = () => {
     const handleAddTodo = () => {
         if (!newTodo.title || !newTodo.content) {
             return message(
-                'Поля не могут быть пустыми', 
+                'Поля не могут быть пустыми',
                 { title: 'Ошибка', type: 'error' }
             );
         };
@@ -29,7 +30,7 @@ const TodoListPage = () => {
                 if (!res) return;
                 const updatedTodos = todos.filter((todo) => todo.id !== id);
                 setTodos(updatedTodos);
-        
+
                 todosApi.deleteTodos(id);
             });
     };
@@ -61,20 +62,22 @@ const TodoListPage = () => {
             </div>
             <hr />
             <div className="container">
-                {todos.map((todo) => (
-                    <div className="todo" key={todo.id}>
-                        <h3 className='todo-title'>
-                            {todo.title}
-                        </h3>
-                        <p className="todo-content">
-                            {todo.content}
-                        </p>
-                        <button className='button-delete' onClick={() => handleDeleteTodo(todo.id)}>Удалить</button>
-                    </div>
-                ))}
+                {todos.map((todo) => {
+                    console.log(todo);
+                    return (
+                        <div className="todo" key={todo.id}>
+                            <h3 className='todo-title'>
+                                {todo.title}
+                            </h3>
+                            <p className="todo-content">
+                                {todo.content}
+                            </p>
+                            <button className='button-delete' onClick={() => handleDeleteTodo(todo.id)}>Удалить</button>
+                            <Link to={todo.id.toString()} className='button-more'>Подробнее</Link>
+                        </div>
+                    )
+                })}
             </div>
         </div>
     );
 };
-
-export default TodoListPage;

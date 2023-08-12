@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const TodoListPage = () => {
+export function TodoListPage() {
     // список всех задач
     const [todos, setTodos] = useState([]);
 
@@ -59,6 +59,4 @@ const TodoListPage = () => {
             </div>
         </div>
     );
-};
-
-export default TodoListPage;
+}
