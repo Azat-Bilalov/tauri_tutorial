@@ -82,8 +82,18 @@ export function TodoListPage() {
                             <p className="todo-content">
                                 {todo.content}
                             </p>
-                            <button className='button button-danger text-md' onClick={() => handleDeleteTodo(todo.id)}>Удалить</button>
-                            <Link to={todo.id.toString()} className='button button-info text-md'>Подробнее</Link>
+                            <button
+                                className='button button-danger text-md'
+                                onClick={() => handleDeleteTodo(todo.id)}
+                            >
+                                Удалить
+                            </button>
+                            <Link
+                                to={todo.id.toString()}
+                                className='button button-info text-md'
+                            >
+                                Подробнее
+                            </Link>
                         </div>
                     )
                 })}

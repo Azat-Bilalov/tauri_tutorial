@@ -392,8 +392,7 @@ h1 {
 /* стили кнопок и текста */
 .button {
   display: inline-block;
-  margin-right: 10px;
-  margin-bottom: 10px;
+  margin: 10px 10px 0 0;
   border-radius: 5px;
   border: none;
   padding: 5px;
@@ -523,7 +522,272 @@ const TodoListPage = () => {
 
 Теперь заметки добавляются и удаляются, настало время связаться с нашим сервером!
 
+Для начала создадим файл `src/api/index.js` и добавим в него класс `TodosApi`, который будет отвечать за взаимодействие с сервером:
+```javascript
+import { fetch, Body } from '@tauri-apps/api/http';
 
+export class TodosApi {
+    constructor() {
+        this.url = 'http://localhost:3000/todos';
+    }
+
+    async getTodos() {
+        const response = await fetch(this.url, {
+            method: 'GET',
+            timeout: 30
+        });
+
+        if (response.ok) {
+            return response.data;
+        } else {
+            throw new Error(response.status);
+        }
+    }
+
+    async postTodos(todo) {
+        const response = await fetch(this.url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: Body.json(todo)
+        });
+
+        console.log(todo);
+
+        if (response.ok) {
+            return response.data;
+        } else {
+            throw new Error(response.status);
+        }
+    }
+
+    async putTodos(todo) {
+        const response = await fetch(`${this.url}/${todo.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: Body.json(todo)
+        });
+
+        if (response.ok) {
+            return response;
+        } else {
+            throw new Error(response.status);
+        }
+    }
+
+    async deleteTodos(id) {
+        const response = await fetch(`${this.url}/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            return response;
+        } else {
+            throw new Error(response.status);
+        }
+    }
+}
+```
+
+Важно отметить, что в данном случае мы используем `fetch` из пакета `@tauri-apps/api/http`. Tauri является мультиязычным фреймворком, и одним из основополагающих принципов является осуществление безопасности пользотеля. В `tauri.conf.json` был указан параметр `scope`, в котором мы указали разрешённые адреса для запросов. Поэтому, если мы попытаемся сделать запрос на другой адрес, то получим ошибку:
+
+`Uncaught (in promise) url not allowed on the configured scope.`
+
+Благодаря этому мы можем быть уверены в том, что наше приложение не сможет отправлять запросы на вредоносные сайты.
+
+Теперь перепишем наш компонент `TodoListPage` c использованием `TodosApi`:
+```jsx
+import React, { useEffect, useState } from 'react';
+import { TodosApi } from '../api';
+
+export function TodoListPage() {
+    // экземпляр класса TodosApi
+    const todosApi = new TodosApi();
+
+    const [todos, setTodos] = useState([]);
+    const [newTodo, setNewTodo] = useState({ title: '', content: '' });
+
+    const handleAddTodo = () => {
+        if (!newTodo.title || !newTodo.content) {
+            return message(
+                'Поля не могут быть пустыми',
+                { title: 'Ошибка', type: 'error' }
+            );
+        };
+        const newTodoWithId = { ...newTodo, id: Date.now() };
+        setTodos([...todos, newTodoWithId]);
+        setNewTodo({ title: '', content: '' });
+
+        todosApi.postTodos(newTodoWithId);
+    };
+
+    const handleDeleteTodo = (id) => {
+        confirm('This action cannot be reverted. Are you sure?')
+            .then(res => {
+                if (!res) return;
+                const updatedTodos = todos.filter((todo) => todo.id !== id);
+                setTodos(updatedTodos);
+
+                todosApi.deleteTodos(id);
+            });
+    };
+
+    // получение списка задач при загрузке страницы
+    useEffect(() => {
+        todosApi.getTodos().then(data => {
+            setTodos(data);
+        });
+    }, []);
+
+    return (
+        // ...
+    );
+}
+```
+
+Теперь мы можем получать список задач при загрузке страницы, добавлять новые и удалять существующие. Но что произойдёт, если текст задачи будет слишком велик?
+
+![Untitled](assets/5.6.png)
+
+Добавим возможность просмотра отдельной задачи. Для этого необходимо добавить роутинг. Для этого установим [пакет](https://reactrouter.com/) `react-router-dom`:
+```bash
+npm install react-router-dom
+```
+
+Теперь улучшим файлувую структуру нашего проекта. Создадим папку `src/app`, `App.jsx` переименуем в `index.jsx` (отредактируйте импорт в `src/main.jsx`) и перенесём в папку `src/app`. Здесь же создадим `RouterProvider.jsx` со следующим содержимым:
+```jsx
+import {
+    BrowserRouter,
+    Route,
+    Routes
+} from 'react-router-dom';
+import { TodoListPage, TodoPage } from '../pages';
+
+export function Router() {
+    return (
+        <BrowserRouter>
+            <div className="App">
+                <Routes>
+                    <Route path="/" exact element={<TodoListPage />} />
+                    <Route path="/:id" element={<TodoPage />} />
+                </Routes>
+            </div>
+        </BrowserRouter>
+    );
+}
+```
+
+Отредактируем `src/app/index.jsx`:
+```jsx
+import React from 'react';
+import { Router } from './RouterProvider';
+
+function App() {
+    return (
+        <Router />
+    );
+}
+
+export default App;
+```
+
+Создадим компонент `TodoPage`, который будет отображать отдельную задачу по её `id`, переданному в адресной строке:
+```jsx
+import { useEffect, useState } from 'react';
+import { TodosApi } from '../api';
+
+export function TodoPage() {
+    const todosApi = new TodosApi();
+
+    // получение id из адресной строки
+    const { id } = useParams();
+
+    const [todo, setTodo] = useState();
+
+    useEffect(() => {
+        todosApi.getTodos().then(todos => {
+            const todo = todos.find(todo => todo.id == id);
+            setTodo(todo);
+        })
+    }, [id]);
+
+    return (
+        <div className='container'>
+            <Link to="/">
+                <button className='button button-light text-lg'>
+                    🔙 Вернуться
+                </button>
+
+            </Link>
+            {todo &&
+                <div className='vertical-center'>
+                    <div>
+                        <h1>{todo?.title}</h1>
+                        <p className='large-content'>{todo?.content}</p>
+                    </div>
+                </div>}
+            {!todo &&
+                <h1>Задача не найдена</h1>
+            }
+        </div>
+    );
+}
+```
+
+Свяжем `TodoListPage` с `TodoPage` с помощью ссылок:
+```jsx
+// импорты
+import { Link } from 'react-router-dom';
+
+export function TodoListPage() {
+  // хуки
+
+  return (
+    // ...
+      <div className="container">
+        {todos.map((todo) => (
+              <div className="todo" key={todo.id}>
+                  <h3 className='todo-title'>
+                      {todo.title}
+                  </h3>
+                  <p className="todo-content">
+                      {todo.content}
+                  </p>
+                  <button
+                    className='button button-danger text-md'
+                    onClick={() => handleDeleteTodo(todo.id)}
+                  >
+                      Удалить 
+                  </button>
+                  <Link
+                    to={todo.id.toString()}
+                    className='button button-info text-md'
+                  >
+                      Подробнее
+                  </Link>
+              </div>
+          ))}
+      </div>
+    // ...
+  );
+}
+```
+
+Осталось только добавить [public API](https://feature-sliced.design/docs/reference/public-api#requirements-for-the-public-api) для страниц `src/pages/index.js`:
+```jsx
+export { TodoListPage } from './TodoListPage';
+export { TodoPage } from './TodoPage';
+```
+
+После проделанной работы результат следующий:
+
+![Untitled](assets/5.7.gif)
 
 ### Шаг 6: Сборка Tauri приложения
 

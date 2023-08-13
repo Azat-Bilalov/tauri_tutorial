@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { TodosApi } from '../api';
 
-export function SingleTodoPage() {
+export function TodoPage() {
     const todosApi = new TodosApi();
 
     const { id } = useParams();
@@ -18,8 +18,6 @@ export function SingleTodoPage() {
     return (
         <div className='container'>
             <Link to="/">
-                {/* <button className='button button-info'>Назад</button>
-               стелка вместо надписи */}
                 <button className='button button-light text-lg'>
                     🔙 Вернуться
                 </button>
