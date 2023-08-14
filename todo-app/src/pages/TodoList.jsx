@@ -34,7 +34,7 @@ export function TodoListPage() {
     };
 
     const handleDeleteTodo = (id) => {
-        confirm('This action cannot be reverted. Are you sure?')
+        confirm('Вы уверены, что хотите удалить задачу?')
             .then(res => {
                 if (!res) return;
                 const updatedTodos = todos.filter((todo) => todo.id !== id);
@@ -53,33 +53,31 @@ export function TodoListPage() {
     return (
         <div>
             <h1>Планирование задач</h1>
-            <div className="container">
+            <div className='container'>
                 <input
-                    className="input-title"
-                    type="text"
-                    placeholder="Название"
+                    className='input-title'
+                    type='text'
+                    placeholder='Название'
                     value={newTodo.title}
                     ref={newTodoRef}
                     onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
                 />
                 <textarea
-                    className="input-content"
-                    placeholder="Содержание"
+                    className='input-content'
+                    placeholder='Содержание'
                     value={newTodo.content}
                     onChange={(e) => setNewTodo({ ...newTodo, content: e.target.value })}
                 />
-                <button className="button button-success text-lg" onClick={handleAddTodo}>Добавить</button>
+                <button className='button button-success text-lg' onClick={handleAddTodo}>Добавить</button>
             </div>
             <hr />
-            <div className="container">
-                {todos.map((todo) => {
-                    console.log(todo);
-                    return (
-                        <div className="todo" key={todo.id}>
+            <div className='container'>
+                {todos.map((todo) => (
+                        <div className='todo' key={todo.id}>
                             <h3 className='todo-title'>
                                 {todo.title}
                             </h3>
-                            <p className="todo-content">
+                            <p className='todo-content'>
                                 {todo.content}
                             </p>
                             <button
@@ -95,8 +93,8 @@ export function TodoListPage() {
                                 Подробнее
                             </Link>
                         </div>
-                    )
-                })}
+                    
+                ))}
             </div>
         </div>
     );

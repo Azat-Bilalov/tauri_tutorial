@@ -17,7 +17,7 @@ export function TodoPage() {
 
     return (
         <div className='container'>
-            <Link to="/">
+            <Link to='/'>
                 <button className='button button-light text-lg'>
                     🔙 Вернуться
                 </button>

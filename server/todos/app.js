@@ -28,7 +28,6 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
     const id = req.params.id;
     const todo = todosController.deleteTodo(id);
-    console.log(todo);
     if (todo) {
         res.send(todo);
     } else {

@@ -1,17 +1,15 @@
 import React from 'react';
-import { TodoListPage, TodoPage } from '../pages';
+import { BrowserRouter } from 'react-router-dom';
 import { Router } from './RouterProvider';
-import { listen } from '@tauri-apps/api/event'
+import { Listener } from './ListenerProvider';
 
 function App() {
-    // const navigate = useNavigate();
-
-    // listen('new-todo', () => {
-    //     navigate('/?new-todo=true');
-    // });
-
     return (
-        <Router />
+        <BrowserRouter>
+            <Listener>
+                <Router />
+            </Listener>
+        </BrowserRouter>
     );
 }
 

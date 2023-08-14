@@ -11,18 +11,18 @@ fn main() {
         .add_submenu(submenu);
 
     tauri::Builder::default()
-        // .menu(menu)
-        // .on_menu_event(|event| {
-        //     match event.menu_item_id() {
-        //       "quit" => {
-        //         std::process::exit(0);
-        //       }
-        //       "new" => {
-        //         event.window().emit("new-todo", "").unwrap();
-        //       },
-        //       _ => {}
-        //     }
-        // })
+        .menu(menu)
+        .on_menu_event(|event| {
+            match event.menu_item_id() {
+              "quit" => {
+                std::process::exit(0);
+              }
+              "new" => {
+                event.window().emit("new-todo", "").unwrap();
+              },
+              _ => {}
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,6 +1,6 @@
-# Метод
+# Tauri методические инструкции
 
-## Создание простого Back-End
+## Создание простого Back-End'а
 
 ### Шаг 1: Установка необходимых инструментов
 
@@ -158,7 +158,7 @@ npm run tauri dev
 
 ![Untitled](assets/startapp.png)
 
-### Шаг 5: Разработка
+### Шаг 5: Разработка frontend
 
 В папке `src` вы найдёте JSX файлы - файлы React компонентов. 
 
@@ -553,8 +553,6 @@ export class TodosApi {
             body: Body.json(todo)
         });
 
-        console.log(todo);
-
         if (response.ok) {
             return response.data;
         } else {
@@ -595,7 +593,7 @@ export class TodosApi {
 }
 ```
 
-Важно отметить, что в данном случае мы используем `fetch` из пакета `@tauri-apps/api/http`. Tauri является мультиязычным фреймворком, и одним из основополагающих принципов является осуществление безопасности пользотеля. В `tauri.conf.json` был указан параметр `scope`, в котором мы указали разрешённые адреса для запросов. Поэтому, если мы попытаемся сделать запрос на другой адрес, то получим ошибку:
+Важно отметить, что в данном случае мы используем `fetch` из пакета `@tauri-apps/api/http`. Tauri является мультиязычным фреймворком, и одним из основополагающих принципов является осуществление безопасности пользователя. В `tauri.conf.json` был указан параметр `scope`, в котором мы указали разрешённые адреса для запросов. Поэтому, если мы попытаемся сделать запрос на другой адрес, то получим ошибку:
 
 `Uncaught (in promise) url not allowed on the configured scope.`
 
@@ -615,28 +613,21 @@ export function TodoListPage() {
 
     const handleAddTodo = () => {
         if (!newTodo.title || !newTodo.content) {
-            return message(
-                'Поля не могут быть пустыми',
-                { title: 'Ошибка', type: 'error' }
-            );
+            return;
         };
         const newTodoWithId = { ...newTodo, id: Date.now() };
         setTodos([...todos, newTodoWithId]);
         setNewTodo({ title: '', content: '' });
 
         todosApi.postTodos(newTodoWithId);
-    };
+    }
 
     const handleDeleteTodo = (id) => {
-        confirm('This action cannot be reverted. Are you sure?')
-            .then(res => {
-                if (!res) return;
-                const updatedTodos = todos.filter((todo) => todo.id !== id);
-                setTodos(updatedTodos);
+        const updatedTodos = todos.filter((todo) => todo.id !== id);
+        setTodos(updatedTodos);
 
-                todosApi.deleteTodos(id);
-            });
-    };
+        todosApi.deleteTodos(id);
+    }
 
     // получение списка задач при загрузке страницы
     useEffect(() => {
@@ -662,35 +653,30 @@ npm install react-router-dom
 
 Теперь улучшим файлувую структуру нашего проекта. Создадим папку `src/app`, `App.jsx` переименуем в `index.jsx` (отредактируйте импорт в `src/main.jsx`) и перенесём в папку `src/app`. Здесь же создадим `RouterProvider.jsx` со следующим содержимым:
 ```jsx
-import {
-    BrowserRouter,
-    Route,
-    Routes
-} from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { TodoListPage, TodoPage } from '../pages';
 
 export function Router() {
     return (
-        <BrowserRouter>
-            <div className="App">
-                <Routes>
-                    <Route path="/" exact element={<TodoListPage />} />
-                    <Route path="/:id" element={<TodoPage />} />
-                </Routes>
-            </div>
-        </BrowserRouter>
+        <Routes>
+            <Route path="/" exact element={<TodoListPage />} />
+            <Route path="/:id" element={<TodoPage />} />
+        </Routes>
     );
 }
 ```
 
-Отредактируем `src/app/index.jsx`:
+Отредактируем `src/app/index.jsx`, пока добавив компонент `Router` в качестве корневого элемента, в дальнейшем мы создадим собственный провайдер, который будет оборачивать `Router`:
 ```jsx
 import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { Router } from './RouterProvider';
 
 function App() {
     return (
-        <Router />
+        <BrowserRouter>
+            <Router />
+        </BrowserRouter>
     );
 }
 
@@ -746,7 +732,7 @@ export function TodoPage() {
 import { Link } from 'react-router-dom';
 
 export function TodoListPage() {
-  // хуки
+  // хуки и хендлеры
 
   return (
     // ...
@@ -789,7 +775,161 @@ export { TodoPage } from './TodoPage';
 
 ![Untitled](assets/5.7.gif)
 
-### Шаг 6: Сборка Tauri приложения
+### Шаг 6: Работа с Tauri API
+
+Tauri API - это набор методов, которые позволяют взаимодействовать с операционной системой, на которой запущено приложение. Например, с помощью Tauri API можно получить список файлов в папке, в которой запущено приложение, или провести системный вызов.
+До этого мы использовали Tauri API для отправки безопасных запросов на сервер, теперь же мы попробуем использовать системные диалоговые окна для отображения ошибок.
+
+В конфигурацию `tauri.conf.json` добавим часть [диалогого API](https://tauri.app/v1/api/js/dialog) в `allowList`:
+```json
+"dialog": {
+  "confirm": true,
+  "message": true
+}
+```
+
+Отредактируем хендлеры в `src/pages/TodoList.jsx`:
+```jsx
+const handleAddTodo = () => {
+    if (!newTodo.title || !newTodo.content) {
+        return message(
+            'Поля не могут быть пустыми',
+            { title: 'Ошибка', type: 'error' }
+        );
+    };
+    const newTodoWithId = { ...newTodo, id: Date.now() };
+    setTodos([...todos, newTodoWithId]);
+    setNewTodo({ title: '', content: '' });
+
+    todosApi.postTodos(newTodoWithId);
+}
+
+const handleDeleteTodo = (id) => {
+    confirm('Вы уверены, что хотите удалить задачу?')
+        .then(res => {
+            if (!res) return;
+            const updatedTodos = todos.filter((todo) => todo.id !== id);
+            setTodos(updatedTodos);
+
+            todosApi.deleteTodos(id);
+        });
+}
+```
+
+Отлично! Теперь приложение будет отображать диалоговые окна при попытке удалить или добавить пустую задачу:
+
+![Untitled](assets/6.1.gif)
+
+Во многих приложениях встречается нативное меню, которое открывается по нажатию на кнопку в верхнем левом углу. Давайте добавим такое [меню](https://tauri.app/v1/guides/features/menu) в наше приложение. Для этого необходимо отредактировать `main.rs` в папке `src-tauri/src`:
+```rust
+// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+use tauri::{CustomMenuItem, Menu, Submenu};
+
+fn main() {
+    let new_todo = CustomMenuItem::new("new".to_string(), "Новая задача");
+    let close = CustomMenuItem::new("quit".to_string(), "Выйти");
+    let submenu = Submenu::new("Файл", Menu::new().add_item(new_todo).add_item(close));
+    let menu = Menu::new()
+        .add_submenu(submenu);
+
+    tauri::Builder::default()
+        .menu(menu)
+        .on_menu_event(|event| {
+            match event.menu_item_id() {
+              "quit" => {
+                // завершаем работу приложения
+                std::process::exit(0);
+              }
+              "new" => {
+                // вызываем событие "new-todo"
+                event.window().emit("new-todo", "").unwrap();
+              },
+              _ => {}
+            }
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+```
+
+Tauri позволяет вызывать события на стороне Rust, а также слушать их на стороне JS. Вместо добавления слушателя на каждой отдельной странице, давайте создадим провайдер (компонент высшего порядка ([HOC](https://ru.legacy.reactjs.org/docs/higher-order-components.html)), исполняющий чисто функциональную часть) `ListenerProvider`, в котором будут слушатели событий. Создадим файл `src/app/ListenerProvider.jsx`:
+```jsx
+import { useNavigate } from "react-router-dom";
+import { listen } from "@tauri-apps/api/event";
+
+export function Listener({ children }) {
+    const navigate = useNavigate();
+
+    listen('new-todo', () => {
+        navigate('/?new-todo');
+    });
+
+    return (
+        <>
+            {children}
+        </>
+    );
+}
+```
+
+Здесь мы слушаем событие `new-todo` и переходим на главную страницу с параметром `new-todo`. С помощью [аргумента](https://react.dev/reference/react/Children) `children` мы можем передавать в провайдер любые компоненты, которые будут обернуты в `ListenerProvider`. Давайте обернем в провайдер роутер в `src/app/index.jsx`:
+```jsx
+import { Listener } from './ListenerProvider';
+
+function App() {
+    return (
+        <BrowserRouter>
+            <Listener>
+                <Router />
+            </Listener>
+        </BrowserRouter>
+    );
+}
+```
+
+Остаётся научиться читать параметры, переданные в адресной строке. Для этого воспользуемся [хуком](https://reactrouter.com/en/main/hooks/use-search-params) `useSearchParams` из библиотеки `react-router-dom`. Отредактируем `src/pages/TodoList.jsx`:
+```jsx
+// импорты
+import { useSearchParams } from 'react-router-dom';
+
+export function TodoListPage() {
+  // хуки и хендлеры
+
+  // обработка параметров в адресной строке
+  const [searchParams] = useSearchParams();
+  // ссылаемся на инпут
+  const newTodoRef = useRef();
+
+  useEffect(() => {
+      if (searchParams.has('new-todo')) {
+          newTodoRef.current.focus();
+      }
+  }, [searchParams]);
+
+  return (
+      // разметка
+          <input
+              className="input-title"
+              type="text"
+              placeholder="Название"
+              value={newTodo.title}
+              ref={newTodoRef}
+              onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
+          />
+      // разметка
+  );
+}
+```
+
+Теперь мы можем использовать нативное меню нашего приложения:
+
+![Untitled](assets/6.2.gif)
+
+Ну что ж, наша задача выполнена! Мы создали приложение, которое может работать с диалоговыми окнами, отправлять запросы на сервер и использовать нативное меню. Поздравляю!
+
+### Шаг 7: Сборка Tauri приложения
 
 Когда вы готовы опубликовать ваше Tauri приложение, вы можете выполнить команду:
 
@@ -865,7 +1005,10 @@ mkdir middleware
 const validateTodo = (req, res, next) => {
     const body = req.body;
 
-    // Проверка наличия поля "title"
+    // Проверка наличия поля "id" и "title"
+    if (!body.id) {
+        return res.status(400).json({ error: 'Id is required' });
+    }
     if (!body.title) {
         return res.status(400).json({ error: 'Title is required' });
     }
@@ -876,6 +1019,7 @@ const validateTodo = (req, res, next) => {
 
     // Создаем объект с валидированными данными
     req.validatedTodo = {
+        id: body.id,
         title: body.title,
         content: content,
         completed: completed

@@ -27,8 +27,6 @@ export class TodosApi {
             body: Body.json(todo)
         });
 
-        console.log(todo);
-
         if (response.ok) {
             return response.data;
         } else {
