@@ -7,9 +7,12 @@
 Перед тем, как начать разрабатывать, убедитесь, что у вас установлены следующие инструменты:
 
 1. Node.js - платформа для выполнения JavaScript кода вне браузера.
-2. npm (Node Package Manager) - менеджер пакетов для Node.js (поставляется вместе с Node.js)
+2. npm (Node Package Manager) - менеджер пакетов для Node.js (поставляется вместе с Node.js).
+3. cargo и rust - язык программирования общего назначение, который будет ядром нашего приложения.
 
-[Скачать](https://nodejs.dev)
+[Скачать Node.js и npm](https://nodejs.dev)
+
+[Скачать rust и cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
 
 ### Шаг 2: Инициализация проекта
 
@@ -43,39 +46,41 @@ const port = 3000; // Вы можете использовать любой др
 app.use(express.json());
 
 // Простой массив для хранения заметок
-let notes = [];
+let todos = [];
 
 // Роут для получения всех заметок
-app.get('/notes', (req, res) => {
-  res.json(notes);
+app.get('/todos', (req, res) => {
+  res.json(todos);
+  console.log(todos);
 });
 
 // Роут для создания новой заметки
-app.post('/notes', (req, res) => {
-  const { title, content } = req.body;
-  const newNote = { title, content };
-  notes.push(newNote);
-  res.status(201).json(newNote);
+app.post('/todos', (req, res) => {
+  const { id, title, content } = req.body;
+  const newTodo = { id, title, content };
+  todos.push(newTodo);
+  res.status(201).json(newTodo);
+  console.log(todos);
 });
 
 // Роут для обновления существующей заметки
-app.put('/notes/:id', (req, res) => {
+app.put('/todos/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const { title, content } = req.body;
-  const noteIndex = notes.findIndex((note) => note.id === id);
+  const todoIndex = todos.findIndex((todo) => todo.id === id);
 
-  if (noteIndex !== -1) {
-    notes[noteIndex] = { id, title, content };
-    res.json(notes[noteIndex]);
+  if (todoIndex !== -1) {
+    todos[todoIndex] = { id, title, content };
+    res.json(todos[todoIndex]);
   } else {
     res.status(404).json({ error: 'Заметка не найдена' });
   }
 });
 
 // Роут для удаления заметки
-app.delete('/notes/:id', (req, res) => {
+app.delete('/todos/:id', (req, res) => {
   const id = parseInt(req.params.id);
-  notes = notes.filter((note) => note.id !== id);
+  todos = todos.filter((todo) => todo.id !== id);
   res.status(204).end();
 });
 
@@ -117,13 +122,9 @@ npm create tauri@latest
 
 ![Untitled](assets/settings.png)
 
-При желании, можно выбрать другое имя проекта, Rust для разработки интерфейса, или другие инструменты, например Vue. 
-
-Мы же покажем далее, как использовать выбранные инструменты.
-
 ### Шаг 3: Конфигурация Tauri приложения
 
-Нужно настроить Tauri приложение в файле `tauri.conf.js`. Этот файл находится в папке src-tauri вашего проекта и позволяет управлять различными настройками такими, как иконки, заголовок окна, настройки безопасности и т.д.
+Нужно настроить Tauri приложение в файле `src-tauri/tauri.conf.json`. Этот файл находится в папке src-tauri вашего проекта и позволяет управлять различными настройками такими, как иконки, заголовок окна, настройки безопасности и т.д.
 
 Для того, чтобы разрешить приложению обращаться к серверу, добавьте конфигурацию в `allowlist` так, чтобы он выглядел следующим образом:
 
@@ -165,12 +166,12 @@ npm run tauri dev
 
 ```jsx
 import React from 'react';
-import TodoListPage from './pages/TodoList';
+import { TodoListPage } from './pages/TodoListPage';
 import './styles.css';
 
 function App() {
     return (
-        <div className="App">
+        <div className='App'>
             <TodoListPage />
         </div>
     );
@@ -179,7 +180,7 @@ function App() {
 export default App;
 ```
 
-Создадим папку `pages`, в которой будут размещены страницы нашего приложения. Добавим в папку компонент первой страницы `TodoList.jsx` - он будет отвечать за вывод списка задач и взаимодействие с ними. `TodoListPage` должен возвращать JSX-код, который [компилируется](https://ru.legacy.reactjs.org/docs/introducing-jsx.html) в вызовы `React.createElement()`, после чего полученные React-элементы [рендерятся](https://ru.legacy.reactjs.org/docs/rendering-elements.html) в DOM. Добавим в исходную функцию `TodoListPage` рендеринг, и сделаем её экспортируемой:
+Создадим папку `pages`, в которой будут размещены страницы нашего приложения. Добавим в папку компонент первой страницы `TodoListPage.jsx` - он будет отвечать за вывод списка задач и взаимодействие с ними:
 
 ```jsx
 import React, { useState } from 'react';
@@ -194,31 +195,35 @@ export function TodoListPage() {
     return (
         <div>
             <h1>Планирование задач</h1>
-            <div className="container">
+            <div className='container'>
                 <input
-                    className="input-title"
-                    type="text"
-                    placeholder="Название"
+                    className='input-title'
+                    type='text'
+                    placeholder='Название'
                     value={newTodo.title}
                 />
                 <textarea
-                    className="input-content"
-                    placeholder="Содержание"
+                    className='input-content'
+                    placeholder='Содержание'
                     value={newTodo.content}
                 />
-                <button className="button-add button-lg">Добавить</button>
+                <button className='button button-success text-lg'>
+                  Добавить
+                </button>
             </div>
             <hr />
-            <div className="container">
-                {todos.map((todo) => ( // Для каждой задачи из списка 
-                    <div className="todo" key={todo.id}>
+            <div className='container'>
+                {todos.map((todo) => (
+                    <div className='todo' key={todo.id}>
                         <h3 className='todo-title'>
                             {todo.title}
                         </h3>
-                        <p className="todo-content">
+                        <p className='todo-content'>
                             {todo.content}
                         </p>
-                        <button className='button-delete'>Удалить</button>
+                        <button className='button button-danger text-md'>
+                            Удалить
+                        </button>
                     </div>
                 ))}
             </div>
@@ -227,11 +232,13 @@ export function TodoListPage() {
 }
 ```
 
+`TodoListPage` должен возвращать JSX-код, который [компилируется](https://ru.legacy.reactjs.org/docs/introducing-jsx.html) в вызовы `React.createElement()`, после чего полученные React-элементы [рендерятся](https://ru.legacy.reactjs.org/docs/rendering-elements.html) в DOM. Мы добавили рендеринг в `TodoListPage` и сделали её экспортируемой.
+
 Теперь, если у нас запущено приложение в режиме разработки, должна быть следующая картина:
 
 ![Untitled](assets/5.1.png)
 
-Так как приложение использует стили по-умолчанию для своего шаблона, мы отредактируем `src/styles.css` так, чтобы сначала [сбросить](https://medium.com/@stasonmars/%D1%81%D0%BE%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B8%CC%86-%D1%81%D0%B1%D1%80%D0%BE%D1%81-css-f5816963c82b) старые стили, а затем установить новые для приложения:
+Можно удалить `src/App.css`. Так как приложение использует стили по-умолчанию для своего шаблона, мы отредактируем `src/styles.css` так, чтобы сначала сбросить старые стили, а затем установить новые для приложения:
 
 <details>
 <summary>Новые стили `src/styles.css`</summary>
@@ -435,6 +442,7 @@ h1 {
 ```
 </details>
 
+
 Теперь приложение должно выглядеть следующим образом:
 
 ![Untitled](assets/5.2.png)
@@ -446,20 +454,18 @@ h1 {
 Дело в том, что мы отображаем состояние компонента, но никак его не меняем. Для того, чтобы изменить состояние, нужно повесить триггер на событие изменения `OnChange`, в котором будет вызываться функция изменения состояния:
 
 ```jsx
-<div className="container">
+<div className='container'>
   <input
-      className="input-title"
-      type="text"
-      placeholder="Название"
+      className='input-title'
+      type='text'
+      placeholder='Название'
       value={newTodo.title}
-
       onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
   />
   <textarea
-      className="input-content"
-      placeholder="Содержание"
+      className='input-content'
+      placeholder='Содержание'
       value={newTodo.content}
-
       onChange={(e) => setNewTodo({ ...newTodo, content: e.target.value })}
   />
   {/* Код кнопки */}
@@ -485,7 +491,7 @@ const TodoListPage = () => {
     // добавление новой задачи
     const handleAddTodo = () => {
         if (!newTodo.title || !newTodo.content) {
-            console.error("Поля не должны быть пустыми");
+            console.error('Поля не должны быть пустыми');
             return;
         };
         const newTodoWithId = { ...newTodo, id: Date.now() };
@@ -505,10 +511,20 @@ const TodoListPage = () => {
 
 Мы добавили две функции, изменяющие состояния при добавлении и при удалении заметки. Повесим их на события нажатия кнопок:
 ```jsx
-<button className="button-add button-lg" onClick={handleAddTodo}>Добавить</button>
+<button
+    className='button button-success text-lg'
+    onClick={handleAddTodo}
+>
+    Добавить
+</button>
 ```
 ```jsx
-<button className='button-delete' onClick={() => handleDeleteTodo(todo.id)}>Удалить</button>
+<button
+    className='button button-danger text-md'
+    onClick={() => handleDeleteTodo(todo.id)}
+>
+    Удалить
+</button>
 ```
 
 Обратите внимание на то, как передаются аргументы функций. 
@@ -598,7 +614,6 @@ export class TodosApi {
 ```jsx
 import React, { useEffect, useState } from 'react';
 import { TodosApi } from '../api';
-import { message, confirm } from '@tauri-apps/api/dialog';
 
 export function TodoListPage() {
     // экземпляр класса TodosApi
@@ -632,11 +647,7 @@ export function TodoListPage() {
         });
     }, []);
 
-    return (
-        <div>
-            {/*...*/}
-        </div>
-    );
+    {/*return ( ... )*/}
 }
 ```
 
@@ -658,8 +669,8 @@ import { TodoListPage, TodoPage } from '../pages';
 export function Router() {
     return (
         <Routes>
-            <Route path="/" exact element={<TodoListPage />} />
-            <Route path="/:id" element={<TodoPage />} />
+            <Route path='/' exact element={<TodoListPage />} />
+            <Route path='/:id' element={<TodoPage />} />
         </Routes>
     );
 }
@@ -682,7 +693,7 @@ function App() {
 export default App;
 ```
 
-Создадим компонент `TodoPage`, который будет отображать отдельную задачу по её `id`, переданному в адресной строке:
+Создадим компонент `src/pages/TodoPage.jsx`, который будет отображать отдельную задачу по её `id`, переданному в адресной строке:
 
 ```jsx
 import { useEffect, useState } from 'react';
@@ -705,7 +716,7 @@ export function TodoPage() {
 
     return (
         <div className='container'>
-            <Link to="/">
+            <Link to='/'>
                 <button className='button button-light text-lg'>
                     🔙 Вернуться
                 </button>
@@ -736,13 +747,13 @@ export function TodoListPage() {
 
   return (
     // ...
-      <div className="container">
+      <div className='container'>
         {todos.map((todo) => (
-              <div className="todo" key={todo.id}>
+              <div className='todo' key={todo.id}>
                   <h3 className='todo-title'>
                       {todo.title}
                   </h3>
-                  <p className="todo-content">
+                  <p className='todo-content'>
                       {todo.content}
                   </p>
                   <button
@@ -771,7 +782,30 @@ export { TodoListPage } from './TodoListPage';
 export { TodoPage } from './TodoPage';
 ```
 
-После проделанной работы результат следующий:
+После проделанной работы `todo-app/src` имеет следующую структуру:
+
+```
+src
+│   main.jsx
+│   styles.css
+│
+├───api
+│       index.js
+│
+├───app
+│       index.jsx
+│       RouterProvider.jsx
+│
+├───assets
+│       react.svg
+│
+└───pages
+        index.js
+        TodoListPage.jsx
+        TodoPage.jsx
+```
+
+А приложение получилось двухстраничным:
 
 ![Untitled](assets/5.7.gif)
 
@@ -786,6 +820,11 @@ Tauri API - это набор методов, которые позволяют 
   "confirm": true,
   "message": true
 }
+```
+
+Импортируем необходимые функции из API:
+```jsx
+import { message, confirm } from '@tauri-apps/api/dialog';
 ```
 
 Отредактируем хендлеры в `src/pages/TodoList.jsx`:
@@ -876,6 +915,7 @@ export function Listener({ children }) {
 
 Здесь мы слушаем событие `new-todo` и переходим на главную страницу с параметром `new-todo`. С помощью [аргумента](https://react.dev/reference/react/Children) `children` мы можем передавать в провайдер любые компоненты, которые будут обернуты в `ListenerProvider`. Давайте обернем в провайдер роутер в `src/app/index.jsx`:
 ```jsx
+// ...импорты
 import { Listener } from './ListenerProvider';
 
 function App() {
@@ -887,39 +927,42 @@ function App() {
         </BrowserRouter>
     );
 }
+
+export default App;
 ```
 
 Остаётся научиться читать параметры, переданные в адресной строке. Для этого воспользуемся [хуком](https://reactrouter.com/en/main/hooks/use-search-params) `useSearchParams` из библиотеки `react-router-dom`. Отредактируем `src/pages/TodoList.jsx`:
 ```jsx
-// импорты
+// ...импорты
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 export function TodoListPage() {
-  // хуки и хендлеры
+    // хуки и хендлеры
 
-  // обработка параметров в адресной строке
-  const [searchParams] = useSearchParams();
-  // ссылаемся на инпут
-  const newTodoRef = useRef();
+    // обработка параметров в адресной строке
+    const [searchParams] = useSearchParams();
+    // ссылаемся на инпут
+    const newTodoRef = useRef();
 
-  useEffect(() => {
-      if (searchParams.has('new-todo')) {
-          newTodoRef.current.focus();
-      }
-  }, [searchParams]);
+    useEffect(() => {
+        if (searchParams.has('new-todo')) {
+            newTodoRef.current.focus();
+        }
+    }, [searchParams]);
 
-  return (
-      // разметка
-          <input
-              className="input-title"
-              type="text"
-              placeholder="Название"
-              value={newTodo.title}
-              ref={newTodoRef}
-              onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
-          />
-      // разметка
-  );
+    return (
+        // разметка
+            <input
+                className='input-title'
+                type='text'
+                placeholder='Название'
+                value={newTodo.title}
+                ref={newTodoRef}
+                onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
+            />
+        // разметка
+    );
 }
 ```
 
