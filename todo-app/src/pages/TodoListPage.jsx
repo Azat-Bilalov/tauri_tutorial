@@ -1,12 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { TodosApi } from '../api';
+import { deleteTodos, postTodos, getTodos } from '../api';
 import { Link } from 'react-router-dom';
 import { message, confirm } from '@tauri-apps/api/dialog';
 import { useSearchParams } from 'react-router-dom';
 
 export function TodoListPage() {
-    const todosApi = new TodosApi();
-
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState({ title: '', content: '' });
 
@@ -25,12 +23,12 @@ export function TodoListPage() {
                 'Поля не могут быть пустыми',
                 { title: 'Ошибка', type: 'error' }
             );
-        };
+        }
         const newTodoWithId = { ...newTodo, id: Date.now() };
         setTodos([...todos, newTodoWithId]);
         setNewTodo({ title: '', content: '' });
 
-        todosApi.postTodos(newTodoWithId);
+        postTodos(newTodoWithId);
     };
 
     const handleDeleteTodo = (id) => {
@@ -40,15 +38,15 @@ export function TodoListPage() {
                 const updatedTodos = todos.filter((todo) => todo.id !== id);
                 setTodos(updatedTodos);
 
-                todosApi.deleteTodos(id);
+                deleteTodos(id);
             });
     };
 
     useEffect(() => {
-        todosApi.getTodos().then(data => {
+        getTodos().then(data => {
             setTodos(data);
         });
-    }, []);
+    }, [getTodos]);
 
     return (
         <div>
@@ -98,4 +96,4 @@ export function TodoListPage() {
             </div>
         </div>
     );
-};
+}

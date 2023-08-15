@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 
-export function Listener({ children }) {
+export function ListenerProvider({ children }) {
     const navigate = useNavigate();
 
     listen('new-todo', () => {
@@ -9,8 +9,6 @@ export function Listener({ children }) {
     });
 
     return (
-        <>
-            {children}
-        </>
+        {children}
     );
 }

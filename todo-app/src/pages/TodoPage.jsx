@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { TodosApi } from '../api';
+import {getTodos} from "../api/index.js";
 
 export function TodoPage() {
-    const todosApi = new TodosApi();
 
     const { id } = useParams();
     const [todo, setTodo] = useState();
 
     useEffect(() => {
-        todosApi.getTodos().then(todos => {
+        getTodos().then(todos => {
             const todo = todos.find(todo => todo.id == id);
             setTodo(todo);
         })

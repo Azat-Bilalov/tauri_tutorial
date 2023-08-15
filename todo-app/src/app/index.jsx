@@ -1,15 +1,13 @@
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { Router } from './RouterProvider';
-import { Listener } from './ListenerProvider';
+import {RouterProvider} from 'react-router-dom';
+import { router } from './Router.jsx';
+import { ListenerProvider } from './ListenerProvider';
 
 function App() {
     return (
-        <BrowserRouter>
-            <Listener>
-                <Router />
-            </Listener>
-        </BrowserRouter>
+        <RouterProvider router={router}>
+            <ListenerProvider/>
+        </RouterProvider>
     );
 }
 

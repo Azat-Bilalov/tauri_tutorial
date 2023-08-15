@@ -662,7 +662,7 @@ export function TodoListPage() {
 npm install react-router-dom
 ```
 
-Теперь улучшим файловую структуру нашего проекта. Создадим папку `src/app`, `App.jsx` переименуем в `index.jsx` (отредактируйте импорт в `src/main.jsx`) и перенесём в папку `src/app`. Здесь же создадим `RouterProvider.jsx` со следующим содержимым:
+Теперь улучшим файловую структуру нашего проекта. Создадим папку `src/app`, `App.jsx` переименуем в `index.jsx` (отредактируйте импорт в `src/main.jsx`) и перенесём в папку `src/app`. Здесь же создадим `Router.jsx` со следующим содержимым:
 ```jsx
 import { Route, Routes } from 'react-router-dom';
 import { TodoListPage, TodoPage } from '../pages';
@@ -795,7 +795,7 @@ src
 │
 ├───app
 │       index.jsx
-│       RouterProvider.jsx
+│       Router.jsx
 │
 ├───assets
 │       react.svg
@@ -828,7 +828,7 @@ Tauri API - это набор методов, который позволяет 
 import { message, confirm } from '@tauri-apps/api/dialog';
 ```
 
-Отредактируем хендлеры в `src/pages/TodoList.jsx`:
+Отредактируем хендлеры в `src/pages/TodoListPage.jsx`:
 ```jsx
 const handleAddTodo = () => {
     if (!newTodo.title || !newTodo.content) {
@@ -932,7 +932,7 @@ function App() {
 export default App;
 ```
 
-Остаётся научиться читать параметры, переданные в адресной строке. Для этого воспользуемся [хуком](https://reactrouter.com/en/main/hooks/use-search-params) `useSearchParams` из библиотеки `react-router-dom`. Отредактируем `src/pages/TodoList.jsx`:
+Остаётся научиться читать параметры, переданные в адресной строке. Для этого воспользуемся [хуком](https://reactrouter.com/en/main/hooks/use-search-params) `useSearchParams` из библиотеки `react-router-dom`. Отредактируем `src/pages/TodoListPage.jsx`:
 ```jsx
 // ...импорты
 import React, { useState, useEffect, useRef } from 'react';
