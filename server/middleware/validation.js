@@ -1,13 +1,16 @@
 const validateTodo = (req, res, next) => {
     const body = req.body;
 
+    let error = {};
     if (!body.id) {
-        return res.status(400).json({ error: 'Id is required' });
+        error.id = "ID is required"
     }
     if (!body.title) {
-        return res.status(400).json({ error: 'Title is required' });
+        error.title = "Title is required"
     }
-
+    if (error.id || error.title) {
+        return res.status(400).json({ error })
+    }
     const content = body.content || '';
     const completed = body.completed || false;
 
