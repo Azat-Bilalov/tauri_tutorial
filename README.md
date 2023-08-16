@@ -105,14 +105,7 @@ node index.js
 
 ## Разработка Tauri приложения
 
-### Шаг 1: Установка Tauri
-Установите Tauri CLI с помощью следующей команды:
-
-```bash
-npm install -g tauri
-```
-
-### Шаг 2: Создание нового Tauri приложения
+### Шаг 1: Создание нового Tauri приложения
 
 Для создания нового Tauri приложения используйте:
 
@@ -123,7 +116,7 @@ npm create tauri@latest
 
 ![Untitled](assets/settings.png)
 
-### Шаг 3: Конфигурация Tauri приложения
+### Шаг 2: Конфигурация Tauri приложения
 
 Нужно настроить Tauri приложение в файле `src-tauri/tauri.conf.json`. Этот файл находится в папке src-tauri вашего проекта и позволяет управлять различными настройками такими, как иконки, заголовок окна, настройки безопасности и т.д.
 
@@ -147,7 +140,7 @@ npm create tauri@latest
 
 Убедитесь, что в массиве scope присутствует адрес вашего Backend'а.
 
-### Шаг 4: Запуск Tauri приложения
+### Шаг 3: Запуск Tauri приложения
 
 Перейдите в папку вашего Tauri приложения и запустите его, используя команды:
 
@@ -160,7 +153,7 @@ npm run tauri dev
 
 ![Untitled](assets/startapp.png)
 
-### Шаг 5: Разработка frontend
+### Шаг 4: Разработка frontend'а
 
 В папке `src` вы найдёте JSX файлы - файлы React компонентов. 
 Сейчас в файле `App.jsx` сгенерированный код. Изменим его так, чтобы в нём остался только наш будущий компонент:
@@ -534,74 +527,72 @@ const TodoListPage = () => {
 
 Теперь заметки добавляются и удаляются, настало время связаться с нашим сервером!
 
-Для начала создадим файл `src/api/index.js` и добавим в него класс `TodosApi`, который будет отвечать за взаимодействие с сервером:
+Для начала создадим файл `src/api/index.js` и добавим в него все функции нашего сервера:
 ```javascript
-import { fetch, Body } from '@tauri-apps/api/http';
+const URL = 'http://localhost:3000/todos';
 
-export class TodosApi {
-    constructor() {
-        this.url = 'http://localhost:3000/todos';
+async function getTodos() {
+    const response = await fetch(URL, {
+        method: 'GET',
+        timeout: 30
+    });
+
+    if (response.ok) {
+        return response.data;
+    } else {
+        throw new Error(response.status);
     }
+}
 
-    async getTodos() {
-        const response = await fetch(this.url, {
-            method: 'GET',
-            timeout: 30
-        });
+async function postTodos(todo) {
+    const response = await fetch(URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: Body.json(todo)
+    });
 
-        if (response.ok) {
-            return response.data;
-        } else {
-            throw new Error(response.status);
+    if (response.ok) {
+        return response.data;
+    } else {
+        throw new Error(response.status);
+    }
+}
+
+async function putTodos(todo) {
+    const response = await fetch(`${URL}/${todo.id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: Body.json(todo)
+    });
+
+    if (response.ok) {
+        return response;
+    } else {
+        throw new Error(response.status);
+    }
+}
+
+async function deleteTodos(id) {
+    const response = await fetch(`${URL}/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
         }
+    });
+
+    if (response.ok) {
+        return response;
+    } else {
+        throw new Error(response.status);
     }
+}
 
-    async postTodos(todo) {
-        const response = await fetch(this.url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: Body.json(todo)
-        });
-
-        if (response.ok) {
-            return response.data;
-        } else {
-            throw new Error(response.status);
-        }
-    }
-
-    async putTodos(todo) {
-        const response = await fetch(`${this.url}/${todo.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: Body.json(todo)
-        });
-
-        if (response.ok) {
-            return response;
-        } else {
-            throw new Error(response.status);
-        }
-    }
-
-    async deleteTodos(id) {
-        const response = await fetch(`${this.url}/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            return response;
-        } else {
-            throw new Error(response.status);
-        }
-    }
+export {
+    getTodos, deleteTodos, putTodos, postTodos
 }
 ```
 
@@ -611,14 +602,12 @@ export class TodosApi {
 
 Благодаря этому мы можем быть уверены в том, что наше приложение не сможет отправлять запросы на вредоносные сайты.
 
-Теперь перепишем наш компонент `TodoListPage` с использованием `TodosApi`:
+Теперь перепишем наш компонент `TodoListPage` с использованием API:
 ```jsx
 import React, { useEffect, useState } from 'react';
-import { TodosApi } from '../api';
+import { deleteTodos, postTodos, getTodos } from '../api';
 
 export function TodoListPage() {
-    // экземпляр класса TodosApi
-    const todosApi = new TodosApi();
 
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState({ title: '', content: '' });
@@ -631,22 +620,22 @@ export function TodoListPage() {
         setTodos([...todos, newTodoWithId]);
         setNewTodo({ title: '', content: '' });
 
-        todosApi.postTodos(newTodoWithId);
+        postTodos(newTodoWithId);
     }
 
     const handleDeleteTodo = (id) => {
         const updatedTodos = todos.filter((todo) => todo.id !== id);
         setTodos(updatedTodos);
 
-        todosApi.deleteTodos(id);
+        deleteTodos(id);
     }
 
     // получение списка задач при загрузке страницы
     useEffect(() => {
-        todosApi.getTodos().then(data => {
+        getTodos().then(data => {
             setTodos(data);
         });
-    }, []);
+    }, [getTodos]);
 
     {/*return ( ... )*/}
 }
@@ -664,52 +653,51 @@ npm install react-router-dom
 
 Теперь улучшим файловую структуру нашего проекта. Создадим папку `src/app`, `App.jsx` переименуем в `index.jsx` (отредактируйте импорт в `src/main.jsx`) и перенесём в папку `src/app`. Здесь же создадим `Router.jsx` со следующим содержимым:
 ```jsx
-import { Route, Routes } from 'react-router-dom';
+import {createBrowserRouter, createRoutesFromElements, Route} from 'react-router-dom';
 import { TodoListPage, TodoPage } from '../pages';
 
-export function Router() {
-    return (
-        <Routes>
-            <Route path='/' exact element={<TodoListPage />} />
-            <Route path='/:id' element={<TodoPage />} />
-        </Routes>
-    );
-}
+export const router = createBrowserRouter(
+    createRoutesFromElements(
+        <>
+            <Route path="/" index exact element={<TodoListPage />}/>
+            <Route path=":id" element={<TodoPage />} />
+        </>
+    )
+)
 ```
 
-Отредактируем `src/app/index.jsx`, пока добавив компонент `Router` в качестве корневого элемента, в дальнейшем мы создадим собственный провайдер, который будет оборачивать `Router`:
+Отредактируем `src/app/index.jsx`, добавив `RouterProvider` в качестве корневого элемента, в дальнейшем мы создадим собственный провайдер:
+
 ```jsx
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { Router } from './RouterProvider';
+import {RouterProvider} from 'react-router-dom';
+import { router } from './Router.jsx';
+import { ListenerProvider } from './ListenerProvider';
 
 function App() {
     return (
-        <BrowserRouter>
-            <Router />
-        </BrowserRouter>
+        <RouterProvider router={router}>
+        </RouterProvider>
     );
 }
 
 export default App;
 ```
 
-Создадим компонент `src/pages/TodoPage.jsx`, который будет отображать отдельную задачу по её `id`, переданному в адресной строке:
+Создадим страницу `src/pages/TodoPage.jsx`, которая будет отображать отдельную задачу по её `id`, переданному в адресной строке:
 
 ```jsx
 import { useEffect, useState } from 'react';
-import { TodosApi } from '../api';
+import { useParams, Link } from 'react-router-dom';
+import {getTodos} from "../api/index.js";
 
 export function TodoPage() {
-    const todosApi = new TodosApi();
 
-    // получение id из адресной строки
     const { id } = useParams();
-
     const [todo, setTodo] = useState();
 
     useEffect(() => {
-        todosApi.getTodos().then(todos => {
+        getTodos().then(todos => {
             const todo = todos.find(todo => todo.id == id);
             setTodo(todo);
         })
@@ -810,7 +798,7 @@ src
 
 ![Untitled](assets/5.7.gif)
 
-### Шаг 6: Работа с Tauri API
+### Шаг 5: Работа с Tauri API
 
 Tauri API - это набор методов, который позволяет взаимодействовать с операционной системой. Например, с помощью Tauri API можно получить список файлов в папке, в которой запущено приложение, или провести системный вызов.
 До этого мы использовали Tauri API для отправки безопасных запросов на сервер, теперь же мы попробуем использовать системные диалоговые окна для отображения ошибок.
@@ -841,7 +829,7 @@ const handleAddTodo = () => {
     setTodos([...todos, newTodoWithId]);
     setNewTodo({ title: '', content: '' });
 
-    todosApi.postTodos(newTodoWithId);
+    postTodos(newTodoWithId);
 }
 
 const handleDeleteTodo = (id) => {
@@ -851,7 +839,7 @@ const handleDeleteTodo = (id) => {
             const updatedTodos = todos.filter((todo) => todo.id !== id);
             setTodos(updatedTodos);
 
-            todosApi.deleteTodos(id);
+            deleteTodos(id);
         });
 }
 ```
@@ -914,18 +902,16 @@ export function Listener({ children }) {
 }
 ```
 
-Здесь мы слушаем событие `new-todo` и переходим на главную страницу с параметром `new-todo`. С помощью [аргумента](https://react.dev/reference/react/Children) `children` мы можем передавать в провайдер любые компоненты, которые будут обернуты в `ListenerProvider`. Давайте обернем в провайдер роутер в `src/app/index.jsx`:
+Здесь мы слушаем событие `new-todo` и переходим на главную страницу с параметром `new-todo`. С помощью [аргумента](https://react.dev/reference/react/Children) `children` мы можем передавать в провайдер любые компоненты, которые будут обернуты в `ListenerProvider`, на случай если мы добавим еще провайдеры. Давайте обернем провайдер в роутер в `src/app/index.jsx`:
 ```jsx
 // ...импорты
-import { Listener } from './ListenerProvider';
+import { ListenerProvider } from './ListenerProvider';
 
 function App() {
     return (
-        <BrowserRouter>
-            <Listener>
-                <Router />
-            </Listener>
-        </BrowserRouter>
+        <RouterProvider router={router}>
+            <ListenerProvider/>
+        </RouterProvider>
     );
 }
 
@@ -973,7 +959,7 @@ export function TodoListPage() {
 
 Ну что ж, наша задача выполнена! Мы создали приложение, которое может работать с диалоговыми окнами, отправлять запросы на сервер и использовать нативное меню. Поздравляю!
 
-### Шаг 7: Сборка Tauri приложения
+### Шаг 6: Сборка Tauri приложения
 
 Когда вы готовы опубликовать ваше Tauri приложение, вы можете выполнить команду:
 
@@ -1050,11 +1036,15 @@ const validateTodo = (req, res, next) => {
     const body = req.body;
 
     // Проверка наличия поля "id" и "title"
+    let error = {};
     if (!body.id) {
-        return res.status(400).json({ error: 'Id is required' });
+        error.id = "ID is required"
     }
     if (!body.title) {
-        return res.status(400).json({ error: 'Title is required' });
+        error.title = "Title is required"
+    }
+    if (error.id || error.title) {
+        return res.status(400).json({ error })
     }
 
     // Задаем значения по умолчанию для "content" и "completed"
@@ -1117,10 +1107,12 @@ curl -X POST -H "Content-Type: application/json" -d '{"content":"Buy fruits"}' h
 ```
 
 Получаем на выходе ошибку:
-```bash
+```json
 {
-  "error": "Title is required"
+  "error": {
+    "title": "Title is required"
+  }
 }
 ```
 
-Теперь у вас есть простое CRUD-backend с использованием Express и Tauri приложение, которое может взаимодействовать с этим Backend'ом. Вы можете использовать Tauri для создания кросс-платформенных desktop-приложений, интегрирующих ваш CRUD-backend для заметок.
+Теперь у вас есть простой CRUD-backend с использованием Express и Tauri приложение, которое может взаимодействовать с этим Backend'ом. Вы можете использовать Tauri для создания кросс-платформенных desktop-приложений, а в будущем и мобильных приложений, обещают авторы Tauri

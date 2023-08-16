@@ -9,8 +9,3 @@ export const router = createBrowserRouter(
         </>
     )
 )
-        // <Routes>
-        //     <Route path='/' exact element={<TodoListPage />} />
-        //     <Route path='/:id' element={<TodoPage />} />
-        // </Routes>
-
