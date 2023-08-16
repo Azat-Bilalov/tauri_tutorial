@@ -547,6 +547,20 @@ const TodoListPage = () => {
 
 Теперь заметки добавляются и удаляются, настало время связаться с нашим сервером!
 
+На данном этапе структура проекта должна выглядеть следующим образом:
+
+```
+src
+│   main.jsx
+│   styles.css
+│
+├───app
+│       App.jsx
+│
+└───pages
+        TodoListPage.jsx
+```
+
 Для начала создадим файл `src/api/index.js` и добавим в него все функции нашего сервера:
 ```javascript
 const URL = 'http://localhost:3000/todos';
@@ -671,7 +685,7 @@ export function TodoListPage() {
 npm install react-router-dom
 ```
 
-Теперь улучшим файловую структуру нашего проекта. Создадим папку `src/app`, `App.jsx` переименуем в `index.jsx` (отредактируйте импорт в `src/main.jsx`) и перенесём в папку `src/app`. Здесь же создадим `Router.jsx` со следующим содержимым:
+Теперь улучшим файловую структуру нашего проекта. Создадим папку `src/app`,  `App.jsx` переименуем в `index.jsx` (не забудте обновить импорт в `src/main.jsx`) и перенесём в папку `src/app`. Здесь же создадим `Router.jsx` со следующим содержимым:
 ```jsx
 import {createBrowserRouter, createRoutesFromElements, Route} from 'react-router-dom';
 import { TodoListPage, TodoPage } from '../pages';
@@ -804,9 +818,6 @@ src
 ├───app
 │       index.jsx
 │       Router.jsx
-│
-├───assets
-│       react.svg
 │
 └───pages
         index.js
@@ -976,6 +987,25 @@ export function TodoListPage() {
 Теперь мы можем использовать нативное меню нашего приложения:
 
 ![Untitled](assets/6.2.gif)
+
+```
+src
+│   main.jsx
+│   styles.css
+│   
+├───api
+│       index.js
+│       
+├───app
+│       index.jsx
+│       ListenerProvider.jsx
+│       Router.jsx
+│
+└───pages
+        index.js
+        TodoListPage.jsx
+        TodoPage.jsx
+```
 
 Ну что ж, наша задача выполнена! Мы создали приложение, которое может работать с диалоговыми окнами, отправлять запросы на сервер и использовать нативное меню. Поздравляю!
 
